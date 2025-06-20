@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Liver Cirrhosis Prediction</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Enter Your Medical Test Values</h2>
+    <form method="POST">
+        <label>Age:</label><input type="text" name="Age" required><br><br>
+        <label>Gender (1 = Male, 0 = Female):</label><input type="text" name="Gender" required><br><br>
+        <label>Total Bilirubin:</label><input type="text" name="TB" required><br><br>
+        <label>Direct Bilirubin:</label><input type="text" name="DB" required><br><br>
+        <label>Alkaline Phosphotase:</label><input type="text" name="Alkphos" required><br><br>
+        <label>SGPT:</label><input type="text" name="Sgpt" required><br><br>
+        <label>SGOT:</label><input type="text" name="Sgot" required><br><br>
+        <label>Total Proteins:</label><input type="text" name="TP" required><br><br>
+        <label>Albumin:</label><input type="text" name="ALB" required><br><br>
+        <label>A/G Ratio:</label><input type="text" name="A/G Ratio" required><br><br>
+        <input type="submit" value="Predict">
+    </form>
+
+    {% if result %}
+        <h3>Prediction Result: {{ result }}</h3>
+    {% endif %}
+</body>
+</html>
