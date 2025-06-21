@@ -59,28 +59,32 @@
         </form>
 
         {% if result %}
-            {% if result == "Low Risk" %}
-                <div class="alert alert-success mt-4 text-center fade-in">
-                    <i class="fas fa-heartbeat me-2"></i><strong>Prediction:</strong> {{ result }}
+            <div class="mt-4 text-center fade-in">
+                <div class="alert 
+                    {% if 'High Risk' in result %} alert-danger
+                    {% elif 'Moderate Risk' in result %} alert-warning
+                    {% elif 'Low Risk' in result %} alert-success
+                    {% else %} alert-info
+                    {% endif %}">
+                    <i class="fas fa-diagnoses me-2"></i><strong>Prediction:</strong> {{ result }}
                 </div>
-            {% elif result == "Moderate Risk" %}
-                <div class="alert alert-warning mt-4 text-center fade-in">
-                    <i class="fas fa-exclamation-circle me-2"></i><strong>Prediction:</strong> {{ result }}
-                </div>
-            {% elif result == "High Risk" %}
-                <div class="alert alert-danger mt-4 text-center fade-in">
-                    <i class="fas fa-skull-crossbones me-2"></i><strong>Prediction:</strong> {{ result }}
-                </div>
-            {% else %}
-                <div class="alert alert-info mt-4 text-center fade-in">
-                    <i class="fas fa-info-circle me-2"></i><strong>Prediction:</strong> {{ result }}
-                </div>
-            {% endif %}
-
-            <div class="text-center mt-3 fade-in">
                 <a href="{{ url_for('download_report') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-download me-1"></i>Download Report
                 </a>
+            </div>
+        {% endif %}
+
+        {% if explanation %}
+            <div class="mt-5 fade-in">
+                <h5 class="text-center">🔍 Top Factors Influencing This Prediction</h5>
+                <ul class="list-group mt-3">
+                    {% for feature, impact in explanation.items() %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ feature }}
+                            <span class="badge bg-secondary">{{ "%.4f"|format(impact) }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
             </div>
         {% endif %}
     </div>
