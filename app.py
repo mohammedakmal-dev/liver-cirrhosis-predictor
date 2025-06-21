@@ -10,6 +10,7 @@ import numpy as np
 import csv
 import io
 import os
+import shap  # 🔍 SHAP added here
 from models import db, User, Prediction
 
 app = Flask(__name__)
@@ -48,6 +49,7 @@ def home():
 @app.route("/predict", methods=["GET", "POST"])
 def predict():
     prediction = None
+    explanation = None
     if request.method == "POST":
         try:
             form_data = request.form.to_dict()
@@ -57,8 +59,16 @@ def predict():
             result = model.predict(scaled)[0]
             prediction = "Cirrhosis Detected (Class 1)" if result == 1 else "No Cirrhosis Detected (Class 2)"
 
+            # 🔍 SHAP explainability
+            explainer = shap.TreeExplainer(model)
+            shap_values = explainer.shap_values(scaled)
+            feature_names = list(form_data.keys())
+            shap_explanation = dict(zip(feature_names, shap_values[1][0]))
+            sorted_explanation = dict(sorted(shap_explanation.items(), key=lambda x: abs(x[1]), reverse=True))
+
             session['inputs'] = form_data
             session['result'] = prediction
+            session['explanation'] = sorted_explanation
 
             if current_user.is_authenticated:
                 new_pred = Prediction(
@@ -73,7 +83,7 @@ def predict():
             prediction = "Something went wrong. Please check your inputs."
             print("🚨 Prediction Error:", e)
 
-    return render_template("index.html", result=prediction)
+    return render_template("index.html", result=prediction, explanation=session.get("explanation"))
 
 @app.route("/download_report")
 @login_required
