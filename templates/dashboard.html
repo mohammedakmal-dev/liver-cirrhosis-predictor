@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Dashboard</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 40px auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        h2 { text-align: center; }
+    </style>
+</head>
+<body>
+    <h2>Prediction History for {{ current_user.username }}</h2>
+    
+    {% if history %}
+        <table>
+            <tr>
+                <th>Timestamp</th>
+                <th>Result</th>
+                <th>Inputs</th>
+            </tr>
+            {% for record in history %}
+            <tr>
+                <td>{{ record.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
+                <td>{{ record.result }}</td>
+                <td><pre style="white-space: pre-wrap;">{{ record.input_data }}</pre></td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No predictions yet. Go make your first one!</p>
+    {% endif %}
+
+    <p style="text-align:center; margin-top:30px;">
+        <a href="{{ url_for('index') }}">← Back to Prediction</a> |
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </p>
+</body>
+</html>

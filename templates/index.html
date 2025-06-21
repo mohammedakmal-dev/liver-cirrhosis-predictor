@@ -1,27 +1,105 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Liver Cirrhosis Prediction</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <title>Liver Cirrhosis Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f7f9fb;
+        }
+        .form-section {
+            max-width: 600px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #progress-container {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <h2>Enter Your Medical Test Values</h2>
-    <form method="POST">
-        <label>Age:</label><input type="text" name="Age" required><br><br>
-        <label>Gender (1 = Male, 0 = Female):</label><input type="text" name="Gender" required><br><br>
-        <label>Total Bilirubin:</label><input type="text" name="TB" required><br><br>
-        <label>Direct Bilirubin:</label><input type="text" name="DB" required><br><br>
-        <label>Alkaline Phosphotase:</label><input type="text" name="Alkphos" required><br><br>
-        <label>SGPT:</label><input type="text" name="Sgpt" required><br><br>
-        <label>SGOT:</label><input type="text" name="Sgot" required><br><br>
-        <label>Total Proteins:</label><input type="text" name="TP" required><br><br>
-        <label>Albumin:</label><input type="text" name="ALB" required><br><br>
-        <label>A/G Ratio:</label><input type="text" name="A/G Ratio" required><br><br>
-        <input type="submit" value="Predict">
-    </form>
+    <div class="container text-center mt-5">
+        <h1 class="mb-3">🧬 Revolutionizing Liver Care</h1>
+        <p class="lead">Enter your medical test values to predict risk of liver cirrhosis</p>
+    </div>
 
-    {% if result %}
-        <h3>Prediction Result: {{ result }}</h3>
-    {% endif %}
+    <div class="form-section">
+        <form method="POST" onsubmit="showProgress()">
+            <div class="mb-3"><label class="form-label">Age</label><input type="number" class="form-control" name="Age" required></div>
+            <div class="mb-3"><label class="form-label">Gender (1 = Male, 0 = Female)</label><input type="number" class="form-control" name="Gender" required></div>
+            <div class="mb-3"><label class="form-label">Total Bilirubin</label><input type="number" step="any" class="form-control" name="TB" required></div>
+            <div class="mb-3"><label class="form-label">Direct Bilirubin</label><input type="number" step="any" class="form-control" name="DB" required></div>
+            <div class="mb-3"><label class="form-label">Alkaline Phosphotase</label><input type="number" class="form-control" name="Alkphos" required></div>
+            <div class="mb-3"><label class="form-label">SGPT</label><input type="number" class="form-control" name="Sgpt" required></div>
+            <div class="mb-3"><label class="form-label">SGOT</label><input type="number" class="form-control" name="Sgot" required></div>
+            <div class="mb-3"><label class="form-label">Total Proteins</label><input type="number" step="any" class="form-control" name="TP" required></div>
+            <div class="mb-3"><label class="form-label">Albumin</label><input type="number" step="any" class="form-control" name="ALB" required></div>
+            <div class="mb-3"><label class="form-label">A/G Ratio</label><input type="number" step="any" class="form-control" name="A/G Ratio" required></div>
+
+            <div id="progress-container" class="mb-3">
+                <label class="form-label">Running prediction...</label>
+                <div class="progress">
+                    <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-microscope me-2"></i>Predict</button>
+        </form>
+
+        {% if result %}
+            {% if result == "Low Risk" %}
+                <div class="alert alert-success mt-4 text-center fade-in">
+                    <i class="fas fa-heartbeat me-2"></i><strong>Prediction:</strong> {{ result }}
+                </div>
+            {% elif result == "Moderate Risk" %}
+                <div class="alert alert-warning mt-4 text-center fade-in">
+                    <i class="fas fa-exclamation-circle me-2"></i><strong>Prediction:</strong> {{ result }}
+                </div>
+            {% elif result == "High Risk" %}
+                <div class="alert alert-danger mt-4 text-center fade-in">
+                    <i class="fas fa-skull-crossbones me-2"></i><strong>Prediction:</strong> {{ result }}
+                </div>
+            {% else %}
+                <div class="alert alert-info mt-4 text-center fade-in">
+                    <i class="fas fa-info-circle me-2"></i><strong>Prediction:</strong> {{ result }}
+                </div>
+            {% endif %}
+
+            <div class="text-center mt-3 fade-in">
+                <a href="{{ url_for('download_report') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-download me-1"></i>Download Report
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function showProgress() {
+            const container = document.getElementById("progress-container");
+            const bar = document.getElementById("progress-bar");
+            container.style.display = "block";
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                } else {
+                    width += 10;
+                    bar.style.width = width + "%";
+                }
+            }, 200);
+        }
+    </script>
 </body>
 </html>
