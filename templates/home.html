@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Liver Cirrhosis Predictor</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f6ff;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    .container {
+      margin-top: 10vh;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #2d3e50;
+    }
+    p {
+      font-size: 1.1rem;
+      color: #4a4a4a;
+      margin-bottom: 30px;
+    }
+    .btn,
+    .btn-outline {
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 5px;
+      font-weight: bold;
+      margin: 10px;
+      display: inline-block;
+    }
+    .btn {
+      background: #3d67ff;
+      color: white;
+    }
+    .btn:hover {
+      background: #2a4edc;
+    }
+    .btn-outline {
+      border: 2px solid #3d67ff;
+      color: #3d67ff;
+    }
+    .btn-outline:hover {
+      background: #3d67ff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to Liver Cirrhosis Predictor</h1>
+    <p>Use AI to detect potential signs of liver cirrhosis in seconds—backed by clinical data and personalized insights.</p>
+    <a href="{{ url_for('predict') }}" class="btn">Start Predicting</a>
+    <a href="{{ url_for('signup') }}" class="btn-outline">Create Account</a>
+  </div>
+</body>
+</html>

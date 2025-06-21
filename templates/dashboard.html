@@ -1,39 +1,158 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>User Dashboard</title>
-    <style>
-        body { font-family: Arial; max-width: 800px; margin: 40px auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 30px; }
-        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-        h2 { text-align: center; }
-    </style>
+  <title>User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 10px;
+    }
+    h2 {
+      text-align: center;
+    }
+    .charts {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    canvas {
+      background: #fff;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    .nav {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .nav a {
+      margin: 0 10px;
+      text-decoration: none;
+      font-weight: bold;
+      color: #3b5bdb;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 600px) {
+      .charts {
+        flex-direction: column;
+        align-items: center;
+      }
+      canvas {
+        width: 90% !important;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h2>Prediction History for {{ current_user.username }}</h2>
-    
-    {% if history %}
-        <table>
-            <tr>
-                <th>Timestamp</th>
-                <th>Result</th>
-                <th>Inputs</th>
-            </tr>
-            {% for record in history %}
-            <tr>
-                <td>{{ record.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
-                <td>{{ record.result }}</td>
-                <td><pre style="white-space: pre-wrap;">{{ record.input_data }}</pre></td>
-            </tr>
-            {% endfor %}
-        </table>
-    {% else %}
-        <p>No predictions yet. Go make your first one!</p>
-    {% endif %}
+  <h2>Welcome, {{ current_user.username }}</h2>
 
-    <p style="text-align:center; margin-top:30px;">
-        <a href="{{ url_for('index') }}">← Back to Prediction</a> |
-        <a href="{{ url_for('logout') }}">Logout</a>
-    </p>
+  <div class="charts">
+    <div>
+      <h3>Prediction Distribution</h3>
+      <canvas id="classChart" width="400" height="300"></canvas>
+    </div>
+    <div>
+      <h3>Predictions Over Time</h3>
+      <canvas id="trendChart" width="400" height="300"></canvas>
+    </div>
+  </div>
+
+  <div class="nav">
+    <a href="{{ url_for('predict') }}">← Back to Prediction</a>
+    <a href="{{ url_for('export_csv') }}">⬇ Download CSV</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </div>
+
+  <h2 style="margin-top:50px;">Prediction History</h2>
+
+  {% if history %}
+    <table>
+      <tr>
+        <th>Timestamp</th>
+        <th>Result</th>
+        <th>Inputs</th>
+      </tr>
+      {% for record in history %}
+      <tr>
+        <td>{{ record.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ record.result }}</td>
+        <td><pre style="white-space: pre-wrap;">{{ record.input_data }}</pre></td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>No predictions yet. Go make your first one!</p>
+  {% endif %}
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    new Chart(document.getElementById('classChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Cirrhosis Detected', 'No Cirrhosis'],
+        datasets: [{
+          label: 'Predictions',
+          data: {{ chart_data | safe }},
+          backgroundColor: ['#f94144', '#43aa8b'],
+          borderColor: ['#ba181b', '#2b9348'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('trendChart'), {
+      type: 'line',
+      data: {
+        labels: {{ trend_labels | safe }},
+        datasets: [{
+          label: 'Predictions per Day',
+          data: {{ trend_counts | safe }},
+          fill: false,
+          borderColor: '#3b5bdb',
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            stepSize: 1
+          }
+        }
+      }
+    });
+  </script>
 </body>
 </html>

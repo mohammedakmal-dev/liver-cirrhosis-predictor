@@ -4,12 +4,15 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from werkzeug.security import generate_password_hash, check_password_hash
 from weasyprint import HTML
 from datetime import datetime
+from collections import Counter
 import joblib
 import numpy as np
+import csv
+import io
 from models import db, User, Prediction
 
 app = Flask(__name__)
-app.secret_key = "super-secret-key"  # Replace in production
+app.secret_key = "super-secret-key"  # Replace this in production
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -26,8 +29,12 @@ scaler = joblib.load("normalizer.pkl")
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-@app.route("/", methods=["GET", "POST"])
-def index():
+@app.route("/")
+def home():
+    return render_template("home.html")
+
+@app.route("/predict", methods=["GET", "POST"])
+def predict():
     prediction = None
     if request.method == "POST":
         try:
@@ -41,7 +48,6 @@ def index():
             session['inputs'] = form_data
             session['result'] = prediction
 
-            # If user is logged in, save prediction
             if current_user.is_authenticated:
                 new_pred = Prediction(
                     input_data=str(form_data),
@@ -72,7 +78,7 @@ def download_report():
         response.headers['Content-Type'] = 'application/pdf'
         response.headers['Content-Disposition'] = 'attachment; filename=prediction_report.pdf'
         return response
-    return redirect(url_for("index"))
+    return redirect(url_for("predict"))
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -99,7 +105,7 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             login_user(user)
-            return redirect(url_for("index"))
+            return redirect(url_for("predict"))
         else:
             flash("Invalid credentials.")
     return render_template("login.html")
@@ -114,11 +120,41 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    history = Prediction.query.filter_by(user_id=current_user.id).order_by(Prediction.timestamp.desc()).all()
-    return render_template("dashboard.html", history=history)
-print("🚀 Starting Flask app...")
+    history = Prediction.query.filter_by(user_id=current_user.id).order_by(Prediction.timestamp.asc()).all()
 
+    detected = sum("Class 1" in h.result for h in history)
+    not_detected = sum("Class 2" in h.result for h in history)
+    chart_data = [detected, not_detected]
+
+    dates = [h.timestamp.strftime("%Y-%m-%d") for h in history]
+    trends = Counter(dates)
+    trend_labels = list(trends.keys())
+    trend_counts = list(trends.values())
+
+    return render_template(
+        "dashboard.html",
+        history=history,
+        chart_data=chart_data,
+        trend_labels=trend_labels,
+        trend_counts=trend_counts
+    )
+
+# 📄 CSV Export Route
+@app.route("/export_csv")
+@login_required
+def export_csv():
+    history = Prediction.query.filter_by(user_id=current_user.id).all()
+    si = io.StringIO()
+    cw = csv.writer(si)
+    cw.writerow(["Timestamp", "Result", "Inputs"])
+    for h in history:
+        cw.writerow([h.timestamp.strftime("%Y-%m-%d %H:%M"), h.result, h.input_data])
+    output = make_response(si.getvalue())
+    output.headers['Content-Disposition'] = 'attachment; filename=prediction_history.csv'
+    output.headers['Content-type'] = 'text/csv'
+    return output
+
+print("🚀 Starting Flask app...")
 
 if __name__ == "__main__":
     app.run(debug=True)
-
