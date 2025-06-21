@@ -65,7 +65,13 @@ def predict():
             feature_names = list(form_data.keys())
             shap_explanation = dict(zip(feature_names, shap_values[1][0]))
             sorted_explanation = dict(sorted(shap_explanation.items(), key=lambda x: abs(x[1]), reverse=True))
-
+            
+            # Prepare SHAP plot data for Plotly
+            shap_plot = {
+                "features": list(sorted_explanation.keys())[:10],
+                "values": [round(float(v), 4) for v in list(sorted_explanation.values())[:10]]
+            }
+            session['shap_plot'] = shap_plot
             session['inputs'] = form_data
             session['result'] = prediction
             session['explanation'] = sorted_explanation
@@ -83,7 +89,7 @@ def predict():
             prediction = "Something went wrong. Please check your inputs."
             print("🚨 Prediction Error:", e)
 
-    return render_template("index.html", result=prediction, explanation=session.get("explanation"))
+    return render_template("index.html", result=prediction, explanation=session.get("explanation"), shap_plot=session.get("shap_plot"))
 
 @app.route("/download_report")
 @login_required

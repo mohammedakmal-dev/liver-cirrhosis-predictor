@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Liver Cirrhosis Predictor</title>
@@ -9,26 +10,38 @@
         body {
             background: #f7f9fb;
         }
+
         .form-section {
             max-width: 600px;
             margin: 4rem auto;
             padding: 2rem;
             background: #ffffff;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
         }
+
         .fade-in {
             animation: fadeIn 0.8s ease-in-out;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         #progress-container {
             display: none;
         }
     </style>
 </head>
+
 <body>
     <div class="container text-center mt-5">
         <h1 class="mb-3">🧬 Revolutionizing Liver Care</h1>
@@ -37,21 +50,32 @@
 
     <div class="form-section">
         <form method="POST" onsubmit="showProgress()">
-            <div class="mb-3"><label class="form-label">Age</label><input type="number" class="form-control" name="Age" required></div>
-            <div class="mb-3"><label class="form-label">Gender (1 = Male, 0 = Female)</label><input type="number" class="form-control" name="Gender" required></div>
-            <div class="mb-3"><label class="form-label">Total Bilirubin</label><input type="number" step="any" class="form-control" name="TB" required></div>
-            <div class="mb-3"><label class="form-label">Direct Bilirubin</label><input type="number" step="any" class="form-control" name="DB" required></div>
-            <div class="mb-3"><label class="form-label">Alkaline Phosphotase</label><input type="number" class="form-control" name="Alkphos" required></div>
-            <div class="mb-3"><label class="form-label">SGPT</label><input type="number" class="form-control" name="Sgpt" required></div>
-            <div class="mb-3"><label class="form-label">SGOT</label><input type="number" class="form-control" name="Sgot" required></div>
-            <div class="mb-3"><label class="form-label">Total Proteins</label><input type="number" step="any" class="form-control" name="TP" required></div>
-            <div class="mb-3"><label class="form-label">Albumin</label><input type="number" step="any" class="form-control" name="ALB" required></div>
-            <div class="mb-3"><label class="form-label">A/G Ratio</label><input type="number" step="any" class="form-control" name="A/G Ratio" required></div>
+            <div class="mb-3"><label class="form-label">Age</label><input type="number" class="form-control" name="Age"
+                    required></div>
+            <div class="mb-3"><label class="form-label">Gender (1 = Male, 0 = Female)</label><input type="number"
+                    class="form-control" name="Gender" required></div>
+            <div class="mb-3"><label class="form-label">Total Bilirubin</label><input type="number" step="any"
+                    class="form-control" name="TB" required></div>
+            <div class="mb-3"><label class="form-label">Direct Bilirubin</label><input type="number" step="any"
+                    class="form-control" name="DB" required></div>
+            <div class="mb-3"><label class="form-label">Alkaline Phosphotase</label><input type="number"
+                    class="form-control" name="Alkphos" required></div>
+            <div class="mb-3"><label class="form-label">SGPT</label><input type="number" class="form-control"
+                    name="Sgpt" required></div>
+            <div class="mb-3"><label class="form-label">SGOT</label><input type="number" class="form-control"
+                    name="Sgot" required></div>
+            <div class="mb-3"><label class="form-label">Total Proteins</label><input type="number" step="any"
+                    class="form-control" name="TP" required></div>
+            <div class="mb-3"><label class="form-label">Albumin</label><input type="number" step="any"
+                    class="form-control" name="ALB" required></div>
+            <div class="mb-3"><label class="form-label">A/G Ratio</label><input type="number" step="any"
+                    class="form-control" name="A/G Ratio" required></div>
 
             <div id="progress-container" class="mb-3">
                 <label class="form-label">Running prediction...</label>
                 <div class="progress">
-                    <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" style="width: 0%"></div>
+                    <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                        style="width: 0%"></div>
                 </div>
             </div>
 
@@ -59,33 +83,58 @@
         </form>
 
         {% if result %}
-            <div class="mt-4 text-center fade-in">
-                <div class="alert 
+        <div class="mt-4 text-center fade-in">
+            <div class="alert 
                     {% if 'High Risk' in result %} alert-danger
                     {% elif 'Moderate Risk' in result %} alert-warning
                     {% elif 'Low Risk' in result %} alert-success
                     {% else %} alert-info
                     {% endif %}">
-                    <i class="fas fa-diagnoses me-2"></i><strong>Prediction:</strong> {{ result }}
-                </div>
-                <a href="{{ url_for('download_report') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-download me-1"></i>Download Report
-                </a>
+                <i class="fas fa-diagnoses me-2"></i><strong>Prediction:</strong> {{ result }}
             </div>
+            <a href="{{ url_for('download_report') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-download me-1"></i>Download Report
+            </a>
+        </div>
         {% endif %}
 
         {% if explanation %}
-            <div class="mt-5 fade-in">
-                <h5 class="text-center">🔍 Top Factors Influencing This Prediction</h5>
-                <ul class="list-group mt-3">
-                    {% for feature, impact in explanation.items() %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ feature }}
-                            <span class="badge bg-secondary">{{ "%.4f"|format(impact) }}</span>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
+        <div class="mt-5 fade-in">
+            <h5 class="text-center">🔍 Top Factors Influencing This Prediction</h5>
+            <ul class="list-group mt-3">
+                {% for feature, impact in explanation.items() %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ feature }}
+                    <span class="badge bg-secondary">{{ "%.4f"|format(impact) }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if shap_plot %}
+        <div class="mt-5">
+            <h5 class="text-center">📊 SHAP Feature Impact Chart</h5>
+            <div id="shap-bar" class="mt-4"></div>
+        </div>
+
+        <!-- Plotly JS CDN -->
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script>
+            const plotData = [{
+                x: {{ shap_plot.values | safe }},
+            y: { { shap_plot.features | safe } },
+            type: 'bar',
+                orientation: 'h',
+                    marker: { color: 'rgba(55,128,191,0.6)', width: 1 }
+    }];
+            const layout = {
+                margin: { l: 100, r: 30, t: 20, b: 30 },
+                yaxis: { automargin: true },
+                height: 400
+            };
+            Plotly.newPlot('shap-bar', plotData, layout);
+        </script>
         {% endif %}
     </div>
 
@@ -106,4 +155,5 @@
         }
     </script>
 </body>
+
 </html>
