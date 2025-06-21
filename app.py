@@ -116,3 +116,9 @@ def logout():
 def dashboard():
     history = Prediction.query.filter_by(user_id=current_user.id).order_by(Prediction.timestamp.desc()).all()
     return render_template("dashboard.html", history=history)
+print("🚀 Starting Flask app...")
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
