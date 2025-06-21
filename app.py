@@ -9,6 +9,7 @@ import joblib
 import numpy as np
 import csv
 import io
+import os
 from models import db, User, Prediction
 
 app = Flask(__name__)
@@ -25,9 +26,19 @@ login_manager.login_view = "login"
 model = joblib.load("rf_model.pkl")
 scaler = joblib.load("normalizer.pkl")
 
+@app.before_first_request
+def initialize_database():
+    with app.app_context():
+        db.create_all()
+        print("✅ Database initialized")
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+@app.route("/health")
+def health():
+    return "OK"
 
 @app.route("/")
 def home():
@@ -59,7 +70,7 @@ def predict():
                 db.session.commit()
         except Exception as e:
             prediction = "Something went wrong. Please check your inputs."
-            print("Error:", e)
+            print("🚨 Prediction Error:", e)
 
     return render_template("index.html", result=prediction)
 
@@ -85,16 +96,19 @@ def signup():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-
-        if User.query.filter_by(username=username).first():
-            flash("Username already exists.")
-        else:
-            hashed = generate_password_hash(password)
-            new_user = User(username=username, password=hashed)
-            db.session.add(new_user)
-            db.session.commit()
-            flash("Signup successful! Please login.")
-            return redirect(url_for("login"))
+        try:
+            if User.query.filter_by(username=username).first():
+                flash("Username already exists.")
+            else:
+                hashed = generate_password_hash(password)
+                new_user = User(username=username, password=hashed)
+                db.session.add(new_user)
+                db.session.commit()
+                flash("Signup successful! Please login.")
+                return redirect(url_for("login"))
+        except Exception as e:
+            flash("Signup failed due to server error.")
+            print("🚨 Signup Error:", e)
     return render_template("signup.html")
 
 @app.route("/login", methods=["GET", "POST"])
@@ -121,7 +135,6 @@ def logout():
 @login_required
 def dashboard():
     history = Prediction.query.filter_by(user_id=current_user.id).order_by(Prediction.timestamp.asc()).all()
-
     detected = sum("Class 1" in h.result for h in history)
     not_detected = sum("Class 2" in h.result for h in history)
     chart_data = [detected, not_detected]
@@ -139,7 +152,6 @@ def dashboard():
         trend_counts=trend_counts
     )
 
-# 📄 CSV Export Route
 @app.route("/export_csv")
 @login_required
 def export_csv():
@@ -157,4 +169,5 @@ def export_csv():
 print("🚀 Starting Flask app...")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # For Render compatibility
+    app.run(debug=True, host="0.0.0.0", port=port)
