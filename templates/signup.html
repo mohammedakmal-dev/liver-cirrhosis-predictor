@@ -1,29 +1,16 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Sign Up</title>
-    <style>
-        body { font-family: Arial; max-width: 500px; margin: 50px auto; }
-        input { display: block; width: 100%; padding: 10px; margin-bottom: 15px; }
-        button { padding: 10px 20px; background-color: #28a745; color: white; border: none; }
-    </style>
-</head>
-<body>
-    <h2>Sign Up</h2>
-    <form method="POST">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Create Account</button>
+{% extends "base.html" %}
+{% block title %}Signup{% endblock %}
+{% block content %}
+  <div class="max-w-md mx-auto bg-white/5 backdrop-blur-md p-8 rounded-xl shadow-lg">
+    <h2 class="text-2xl font-semibold mb-6 text-center">Create Account</h2>
+    <form method="POST" class="space-y-4">
+      <input name="username" placeholder="Username" class="bg-white/10 text-white px-4 py-2 rounded w-full" required />
+      <input name="password" type="password" placeholder="Password" class="bg-white/10 text-white px-4 py-2 rounded w-full" required />
+      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 py-2 rounded font-medium">Sign Up</button>
     </form>
-    <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul style="color:red;">
-                {% for msg in messages %}
-                    <li>{{ msg }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-</body>
-</html>
+    <p class="text-center text-sm text-slate-300 mt-4">
+      Already have an account?
+      <a href="{{ url_for('login') }}" class="underline hover:text-white">Login here</a>
+    </p>
+  </div>
+{% endblock %}

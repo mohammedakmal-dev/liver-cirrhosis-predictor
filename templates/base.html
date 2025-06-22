@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}Liver Health Predictor{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body
+    class="transition-colors duration-300 bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white min-h-screen flex flex-col"
+    id="main-body">
+
+    <!-- Navbar -->
+    <header class="bg-white/5 backdrop-blur-md shadow-lg px-6 py-4 flex justify-between items-center">
+        <div class="text-2xl font-bold tracking-wide" id="brand">LiverIQ</div>
+        <nav class="flex items-center space-x-4 text-sm md:text-base font-medium">
+            <a href="{{ url_for('home') }}" class="hover:text-indigo-300 nav-link">Home</a>
+            <a href="{{ url_for('predict') }}" class="hover:text-indigo-300 nav-link">Predict</a>
+            <a href="{{ url_for('login') }}" class="hover:text-indigo-300 nav-link">Login</a>
+            <a href="{{ url_for('signup') }}" class="hover:text-indigo-300 nav-link">Signup</a>
+
+            <!-- Theme Toggle Icon -->
+            <button id="themeToggle" class="text-xl hover:text-indigo-400 transition transform hover:scale-110"
+                title="Toggle Theme">
+                🌙
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-sm text-slate-400 py-4">
+        &copy; {{ datetime.utcnow().year }} Built with ❤️ by Mohammed
+    </footer>
+
+    <script>
+        const toggle = document.getElementById('themeToggle');
+        const body = document.getElementById('main-body');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const brand = document.getElementById('brand');
+        const savedTheme = localStorage.getItem('theme');
+      
+        function setTheme(isDark) {
+          if (isDark) {
+            body.classList.add('text-white');
+            body.classList.remove('text-gray-900');
+            body.classList.replace('from-white', 'from-gray-900');
+            body.classList.replace('via-slate-200', 'via-slate-800');
+            body.classList.replace('to-white', 'to-gray-900');
+            toggle.textContent = '🌙';
+          } else {
+            body.classList.add('text-gray-900');
+            body.classList.remove('text-white');
+            body.classList.replace('from-gray-900', 'from-white');
+            body.classList.replace('via-slate-800', 'via-slate-200');
+            body.classList.replace('to-gray-900', 'to-white');
+            toggle.textContent = '☀️';
+          }
+      
+          navLinks.forEach(link => link.classList.toggle('text-white', isDark));
+          brand.classList.toggle('text-white', isDark);
+          brand.classList.toggle('text-gray-900', !isDark);
+        }
+      
+        // Apply saved theme on load
+        setTheme(savedTheme !== 'light');
+      
+        toggle.addEventListener('click', () => {
+          const isDark = body.classList.contains('text-white');
+          setTheme(!isDark);
+          localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        });
+      </script>
+
+</body>
+
+</html>

@@ -10,11 +10,11 @@ import numpy as np
 import csv
 import io
 import os
-import shap  # 🔍 SHAP added here
+import shap
 from models import db, User, Prediction
 
 app = Flask(__name__)
-app.secret_key = "super-secret-key"  # Replace this in production
+app.secret_key = "super-secret-key"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -23,7 +23,6 @@ db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
-# Load model and scaler
 model = joblib.load("rf_model.pkl")
 scaler = joblib.load("normalizer.pkl")
 
@@ -42,9 +41,11 @@ def initialize_database():
 def health():
     return "OK"
 
+from datetime import datetime
+
 @app.route("/")
 def home():
-    return render_template("home.html")
+    return render_template("home.html", datetime=datetime)
 
 @app.route("/predict", methods=["GET", "POST"])
 def predict():
@@ -59,22 +60,21 @@ def predict():
             result = model.predict(scaled)[0]
             prediction = "Cirrhosis Detected (Class 1)" if result == 1 else "No Cirrhosis Detected (Class 2)"
 
-            # 🔍 SHAP explainability
             explainer = shap.TreeExplainer(model)
             shap_values = explainer.shap_values(scaled)
             feature_names = list(form_data.keys())
             shap_explanation = dict(zip(feature_names, shap_values[1][0]))
             sorted_explanation = dict(sorted(shap_explanation.items(), key=lambda x: abs(x[1]), reverse=True))
-            
-            # Prepare SHAP plot data for Plotly
+
             shap_plot = {
                 "features": list(sorted_explanation.keys())[:10],
                 "values": [round(float(v), 4) for v in list(sorted_explanation.values())[:10]]
             }
-            session['shap_plot'] = shap_plot
+
             session['inputs'] = form_data
             session['result'] = prediction
             session['explanation'] = sorted_explanation
+            session['shap_plot'] = shap_plot
 
             if current_user.is_authenticated:
                 new_pred = Prediction(
@@ -85,11 +85,12 @@ def predict():
                 )
                 db.session.add(new_pred)
                 db.session.commit()
+
         except Exception as e:
             prediction = "Something went wrong. Please check your inputs."
             print("🚨 Prediction Error:", e)
 
-    return render_template("index.html", result=prediction, explanation=session.get("explanation"), shap_plot=session.get("shap_plot"))
+    return render_template("index.html", result=prediction, explanation=session.get("explanation"), shap_plot=session.get("shap_plot"), datetime=datetime)
 
 @app.route("/download_report")
 @login_required
@@ -108,6 +109,8 @@ def download_report():
         return response
     return redirect(url_for("predict"))
 
+
+from datetime import datetime
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
@@ -126,8 +129,9 @@ def signup():
         except Exception as e:
             flash("Signup failed due to server error.")
             print("🚨 Signup Error:", e)
-    return render_template("signup.html")
+    return render_template("signup.html", datetime=datetime)
 
+from datetime import datetime
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -136,10 +140,12 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             login_user(user)
+            session["toast"] = f"Welcome back, {username}!"
             return redirect(url_for("predict"))
         else:
-            flash("Invalid credentials.")
-    return render_template("login.html")
+            session["toast"] = "Invalid credentials. Try again."
+            return redirect(url_for("login"))
+    return render_template("login.html", datetime=datetime)
 
 @app.route("/logout")
 @login_required
@@ -169,6 +175,42 @@ def dashboard():
         trend_counts=trend_counts
     )
 
+@app.route("/admin_dashboard")
+@login_required
+def admin_dashboard():
+    if not current_user.is_admin:
+        flash("Access denied: Admins only.")
+        return redirect(url_for("dashboard"))
+
+    users = User.query.all()
+    predictions = Prediction.query.order_by(Prediction.timestamp.desc()).all()
+
+    # Build chart data
+    class_counts = {"Class 1": 0, "Class 2": 0}
+    date_counts = {}
+
+    for p in predictions:
+        if "Class 1" in p.result:
+            class_counts["Class 1"] += 1
+        elif "Class 2" in p.result:
+            class_counts["Class 2"] += 1
+
+        day = p.timestamp.strftime("%Y-%m-%d")
+        date_counts[day] = date_counts.get(day, 0) + 1
+
+    sorted_dates = sorted(date_counts.items())
+    trend_labels = [d[0] for d in sorted_dates]
+    trend_counts = [d[1] for d in sorted_dates]
+
+    return render_template(
+        "admin_dashboard.html",
+        users=users,
+        predictions=predictions,
+        class_counts=class_counts,
+        trend_labels=trend_labels,
+        trend_counts=trend_counts
+    )
+
 @app.route("/export_csv")
 @login_required
 def export_csv():
@@ -180,6 +222,41 @@ def export_csv():
         cw.writerow([h.timestamp.strftime("%Y-%m-%d %H:%M"), h.result, h.input_data])
     output = make_response(si.getvalue())
     output.headers['Content-Disposition'] = 'attachment; filename=prediction_history.csv'
+    output.headers['Content-type'] = 'text/csv'
+    return output
+
+@app.route("/export_all_csv")
+@login_required
+def export_all_csv():
+    if not current_user.is_admin:
+        flash("Access denied: Admins only.")
+        return redirect(url_for("dashboard"))
+
+    start_str = request.args.get("start")
+    end_str = request.args.get("end")
+
+    query = Prediction.query
+
+    if start_str and end_str:
+        try:
+            start = datetime.strptime(start_str, "%Y-%m-%d")
+            end = datetime.strptime(end_str, "%Y-%m-%d")
+            end = datetime(end.year, end.month, end.day, 23, 59, 59)  # include full day
+            query = query.filter(Prediction.timestamp >= start, Prediction.timestamp <= end)
+        except ValueError:
+            flash("Invalid date format provided.")
+            return redirect(url_for("admin_dashboard"))
+
+    all_predictions = query.order_by(Prediction.timestamp.desc()).all()
+
+    si = io.StringIO()
+    cw = csv.writer(si)
+    cw.writerow(["Timestamp", "Username", "Result", "Inputs"])
+    for p in all_predictions:
+        cw.writerow([p.timestamp.strftime("%Y-%m-%d %H:%M"), p.user.username, p.result, p.input_data])
+
+    output = make_response(si.getvalue())
+    output.headers['Content-Disposition'] = 'attachment; filename=filtered_predictions.csv'
     output.headers['Content-type'] = 'text/csv'
     return output
 

@@ -1,66 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Liver Cirrhosis Predictor</title>
+  <meta charset="UTF-8" />
+  <title>Liver Health Predictor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f2f6ff;
-      margin: 0;
-      padding: 0;
-      text-align: center;
+    .wave-bg {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      position: relative;
+      overflow: hidden;
     }
-    .container {
-      margin-top: 10vh;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-      background: white;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+    .wave-bg::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 200%;
+      height: 100px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 20%, transparent 70%);
+      animation: wave 10s linear infinite;
+      opacity: 0.3;
     }
-    h1 {
-      color: #2d3e50;
-    }
-    p {
-      font-size: 1.1rem;
-      color: #4a4a4a;
-      margin-bottom: 30px;
-    }
-    .btn,
-    .btn-outline {
-      text-decoration: none;
-      padding: 12px 24px;
-      border-radius: 5px;
-      font-weight: bold;
-      margin: 10px;
-      display: inline-block;
-    }
-    .btn {
-      background: #3d67ff;
-      color: white;
-    }
-    .btn:hover {
-      background: #2a4edc;
-    }
-    .btn-outline {
-      border: 2px solid #3d67ff;
-      color: #3d67ff;
-    }
-    .btn-outline:hover {
-      background: #3d67ff;
-      color: white;
+    @keyframes wave {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
     }
   </style>
 </head>
-<body>
-  <div class="container">
-    <h1>Welcome to Liver Cirrhosis Predictor</h1>
-    <p>Use AI to detect potential signs of liver cirrhosis in seconds—backed by clinical data and personalized insights.</p>
-    <a href="{{ url_for('predict') }}" class="btn">Start Predicting</a>
-    <a href="{{ url_for('signup') }}" class="btn-outline">Create Account</a>
-  </div>
+<body class="text-white bg-slate-900">
+
+  <!-- Hero Section -->
+  <section class="wave-bg min-h-screen flex flex-col justify-center items-center px-6 text-center z-10 relative">
+    <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4 drop-shadow-lg" data-aos="fade-down">
+      Predict Liver Health with AI
+    </h1>
+    <p class="text-lg md:text-xl text-slate-300 max-w-2xl mb-8" data-aos="fade-up">
+      Get fast, accurate insights powered by machine learning — no appointments needed.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center" data-aos="zoom-in-up">
+      <a href="{{ url_for('predict') }}" class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-full font-semibold text-white shadow-lg transition">
+        Start Prediction
+      </a>
+      <a href="{{ url_for('signup') }}" class="border border-white px-6 py-3 rounded-full font-semibold hover:bg-white hover:text-slate-800 transition">
+        Create Account
+      </a>
+    </div>
+  </section>
+
+  <!-- Timeline: How It Works -->
+  <section class="py-20 bg-slate-800">
+    <div class="max-w-5xl mx-auto px-6 text-center">
+      <h2 class="text-3xl font-bold mb-12" data-aos="fade-up">🧪 How It Works</h2>
+      <div class="grid md:grid-cols-3 gap-8 text-left">
+        <div class="bg-slate-700 p-6 rounded-lg shadow hover:shadow-lg transition" data-aos="fade-up" data-aos-delay="100">
+          <h3 class="text-xl font-semibold mb-2">1. Enter Your Details</h3>
+          <p class="text-slate-300">Fill out a simple form with your medical metrics — no complex jargon.</p>
+        </div>
+        <div class="bg-slate-700 p-6 rounded-lg shadow hover:shadow-lg transition" data-aos="fade-up" data-aos-delay="200">
+          <h3 class="text-xl font-semibold mb-2">2. AI Makes a Prediction</h3>
+          <p class="text-slate-300">Our trained model analyzes your data instantly using advanced machine learning.</p>
+        </div>
+        <div class="bg-slate-700 p-6 rounded-lg shadow hover:shadow-lg transition" data-aos="fade-up" data-aos-delay="300">
+          <h3 class="text-xl font-semibold mb-2">3. Understand & Download</h3>
+          <p class="text-slate-300">Review clear explanations and download a PDF report — for peace of mind or your doctor.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 py-6 text-center text-slate-500 text-sm">
+    &copy; {{ datetime.utcnow().year }} Liver Health Predictor. Designed by Mohammed Akmal.
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>AOS.init();</script>
 </body>
 </html>

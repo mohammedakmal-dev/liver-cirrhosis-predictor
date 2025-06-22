@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6f8;
+        }
+
+        .dashboard-section {
+            margin: 3rem auto;
+            padding: 2rem;
+            background: #ffffff;
+            border-radius: 8px;
+            max-width: 1100px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .table-wrap {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container dashboard-section">
+        <h2 class="mb-4 text-center">👩‍⚕️ Admin Dashboard</h2>
+        <form method="GET" action="{{ url_for('export_all_csv') }}" class="row gy-2 gx-2 align-items-end mb-4">
+            <div class="col-auto">
+                <label for="start" class="form-label mb-0">From</label>
+                <input type="date" name="start" id="start" class="form-control" required>
+            </div>
+            <div class="col-auto">
+                <label for="end" class="form-label mb-0">To</label>
+                <input type="date" name="end" id="end" class="form-control" required>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-success">
+                    <i class="fas fa-calendar-alt me-1"></i>Export Filtered Predictions
+                </button>
+            </div>
+        </form>
+        <h5>All Registered Users:</h5>
+        <table class="table table-bordered table-hover table-sm mb-5">
+            <thead class="table-light">
+                <tr>
+                    <th>User ID</th>
+                    <th>Username</th>
+                    <th>Admin?</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ "✅" if user.is_admin else "❌" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h5 class="mt-4">All Predictions (Latest First):</h5>
+        <div class="table-wrap">
+            <table class="table table-striped table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Username</th>
+                        <th>Result</th>
+                        <th>Inputs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in predictions %}
+                    <tr>
+                        <td>{{ p.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
+                        <td>{{ p.user.username }}</td>
+                        <td>{{ p.result }}</td>
+                        <td>
+                            <pre style="white-space: pre-wrap">{{ p.input_data }}</pre>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if class_counts["Class 1"] == 0 and class_counts["Class 2"] == 0 %}
+        <div class="alert alert-info mt-4">
+            📭 No prediction data yet — charts will appear once users start predicting.
+        </div>
+        {% else %}
+        <hr class="my-4" />
+        <h5 class="mb-3">📊 Summary Analytics</h5>
+        <canvas id="classChart" height="120"></canvas>
+        <canvas id="trendChart" class="mt-4" height="120"></canvas>
+        {% endif %}
+
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <a href="{{ url_for('export_csv') }}" class="btn btn-outline-primary">
+                <i class="fas fa-file-csv me-1"></i> Export My Predictions
+            </a>
+            <a href="{{ url_for('export_all_csv') }}" class="btn btn-outline-success">
+                <i class="fas fa-database me-1"></i> Export All Predictions
+            </a>
+        </div>
+    </div>
+
+    <script src="https://kit.fontawesome.com/7f25b3fcd1.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const classData = {
+            labels: ["Class 1 (Detected)", "Class 2 (Not Detected)"],
+            datasets: [{
+                data: [{{ class_counts["Class 1"] }}, {{ class_counts["Class 2"] }}],
+            backgroundColor: ["#dc3545", "#28a745"]
+    }]
+};
+
+        const trendData = {
+            labels: {{ trend_labels | tojson }},
+        datasets: [{
+            label: "Predictions per Day",
+            data: {{ trend_counts | tojson }},
+            fill: false,
+            borderColor: "#007bff",
+            tension: 0.1
+    }]
+};
+
+        new Chart(document.getElementById("classChart"), {
+            type: "pie",
+            data: classData
+        });
+
+        new Chart(document.getElementById("trendChart"), {
+            type: "line",
+            data: trendData
+        });
+    </script>
+</body>
+
+</html>
