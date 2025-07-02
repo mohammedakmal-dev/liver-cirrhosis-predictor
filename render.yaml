@@ -3,7 +3,7 @@ echo   - type: web >> render.yaml
 echo     name: liveiq >> render.yaml
 echo     env: python >> render.yaml
 echo     plan: free >> render.yaml
-echo     buildCommand: "pip install -r requirements.txt" >> render.yaml
+echo     buildCommand: "pip install --upgrade pip setuptools wheel && pip install --no-build-isolation -r requirements.txt"
 echo     startCommand: "gunicorn app:app" >> render.yaml
 echo     envVars: >> render.yaml
 echo       - key: PYTHON_VERSION >> render.yaml
