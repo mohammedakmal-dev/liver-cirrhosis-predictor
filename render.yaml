@@ -1,0 +1,10 @@
+echo services: > render.yaml
+echo   - type: web >> render.yaml
+echo     name: liveiq >> render.yaml
+echo     env: python >> render.yaml
+echo     plan: free >> render.yaml
+echo     buildCommand: "pip install -r requirements.txt" >> render.yaml
+echo     startCommand: "gunicorn app:app" >> render.yaml
+echo     envVars: >> render.yaml
+echo       - key: PYTHON_VERSION >> render.yaml
+echo         value: 3.10.11 >> render.yaml
